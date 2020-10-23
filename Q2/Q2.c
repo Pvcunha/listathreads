@@ -74,20 +74,33 @@ void *t_change(void *threadid) {
         
         FILE * f = fopen(b, "r");
         
+        // Percorre o arquivo enquanto nao eh eof
         while(!feof(f)) {
+
+            // separa a linha na qual vai se trabalhar
             int i;
+
+            // so para debug
             printf("thread=%d linha=%d\n", id, i);
+            
+            // tranca-se a linha
             pthread_mutex_lock(&l_mutex[i]);
+
+            //verifica se a linha foi editada a pouco e se foi ela precisa permanecer 2 segundos sem ser mudada
             if(painel[i].em_espera) {
                 printf("Estou em espera %d, linha=%d\n", id, i);
                 sleep(10);
                 painel[i].em_espera = false;
             }
+
+            // Constrói toda  a linha das informaçoes tiradas do arquivo
             Trem e;
             fscanf(f, "%d", &i);
             fscanf(f, "%s %s %s", e.id, e.estacao, e.hora);
             painel[i] = constroi_linha(e, true);
             printf("---------------\narq=%s %d\n%s %s %s pela thread: %d\n---------------\n\n", b, i, painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, id);
+            
+            // libera a linha para outras threads
             pthread_mutex_unlock(&l_mutex[i]);
         }
     }
