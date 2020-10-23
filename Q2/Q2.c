@@ -25,12 +25,16 @@ int arq_cobertos;
 //threads do sistema
 pthread_t *threads;
 
+pthread_t print_thread;
+
 pthread_mutex_t gen_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t *l_mutex = NULL;
 
 // Representa o painel de linhas
 Linha *painel = NULL;
 
+//indica o fim do sistema pelo termino das outras threads
+bool p_status;
 
 Trem constroi_trem(char *id, char *estacao, char *hora){
     Trem r;
@@ -63,7 +67,7 @@ void *t_change(void *threadid) {
         pthread_mutex_lock(&gen_mutex);
         a = arq_cobertos;
 
-        printf("THREAD_ID=%d, pegou o %d.txt\n", id, a);
+        //printf("THREAD_ID=%d, pegou o %d.txt\n", id, a);
         
         arq_cobertos++;
         
@@ -79,36 +83,48 @@ void *t_change(void *threadid) {
 
             // separa a linha na qual vai se trabalhar
             int i;
-
+            fscanf(f, "%d", &i);
             // so para debug
-            printf("thread=%d linha=%d\n", id, i);
+            //printf("thread=%d linha=%d\n", id, i);
             
             // tranca-se a linha
             pthread_mutex_lock(&l_mutex[i]);
 
             //verifica se a linha foi editada a pouco e se foi ela precisa permanecer 2 segundos sem ser mudada
             if(painel[i].em_espera) {
-                printf("Estou em espera %d, linha=%d\n", id, i);
-                sleep(10);
+               // printf("Estou em espera %d, linha=%d\n", id, i);
+                sleep(2);
                 painel[i].em_espera = false;
             }
 
             // Constrói toda  a linha das informaçoes tiradas do arquivo
             Trem e;
-            fscanf(f, "%d", &i);
+            
             fscanf(f, "%s %s %s", e.id, e.estacao, e.hora);
             painel[i] = constroi_linha(e, true);
-            printf("---------------\narq=%s %d\n%s %s %s pela thread: %d\n---------------\n\n", b, i, painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, id);
+            //printf("---------------\narq=%s %d\n%s %s %s pela thread: %d\n---------------\n\n", b, i, painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, id);
             
             // libera a linha para outras threads
             pthread_mutex_unlock(&l_mutex[i]);
         }
     }
 
-    printf("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx Estou fora %d", id);
     pthread_exit(NULL);
 }
 
+void *print() {
+    while(p_status) {
+        printf("---------------------BOARD----------------\n");
+        for(int i = 0; i < l; i++)
+            printf("%s %s %s\n", painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora);
+        
+        printf("---------------------END_BOARD----------------\n");
+        
+        sleep(2);
+    }
+
+    pthread_exit(NULL);
+}
 
 int main() {
     
@@ -116,6 +132,8 @@ int main() {
     // Inicializando e alocando variáveis necessárias
     scanf("%d %d %d", &n, &t, &l);
     
+    p_status = true;
+
     //variável que se refere aos arquivos ja cobertos
     arq_cobertos = 0;
     
@@ -150,9 +168,18 @@ int main() {
 
     }
 
+    rc = pthread_create(&print_thread, NULL, print, NULL);
+    if(rc) {
+        printf("Thread_Print ERROR");
+        exit(-1);
+    }
+
     for(int i = 0; i < t; i++) 
         pthread_join(threads[i], NULL);
     
+    p_status = false;
+    pthread_join(print_thread, NULL);
+
     /*FILE * f = fopen("0.txt", "r");
     while (!feof(f))
     {
