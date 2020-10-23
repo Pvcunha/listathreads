@@ -1,6 +1,6 @@
 0
-ABC123 Munique 19:00 
+WWW123 Munique 19:00 
 1
-QWE497 Berlim 18:50
+MEU497 Berlim 18:50
 2
-GHD056 Frankfurt 20:00
+OLA056 Frankfurt 20:00

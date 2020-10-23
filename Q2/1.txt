@@ -1,6 +1,6 @@
 2
-ABC123 Paris 19:00 
+ABCD23 Paris 19:00 
 0
-QWE497 Japao 18:50
+QWEG97 Japao 18:50
 1
-GHD056 Inglaterra 20:00
+GHDR56 Inglaterra 20:00

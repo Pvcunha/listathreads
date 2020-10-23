@@ -29,6 +29,8 @@ pthread_t print_thread;
 
 pthread_mutex_t gen_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t *l_mutex = NULL;
+pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t print_cond = PTHREAD_COND_INITIALIZER;
 
 // Representa o painel de linhas
 Linha *painel = NULL;
@@ -90,9 +92,12 @@ void *t_change(void *threadid) {
             // tranca-se a linha
             pthread_mutex_lock(&l_mutex[i]);
 
+            //espera pelo fim do print
+            pthread_cond_wait(&print_cond, &l_mutex[i]);
+
             //verifica se a linha foi editada a pouco e se foi ela precisa permanecer 2 segundos sem ser mudada
             if(painel[i].em_espera) {
-               // printf("Estou em espera %d, linha=%d\n", id, i);
+               //printf("Estou em espera %d, linha=%d\n", id, i);
                 sleep(2);
                 painel[i].em_espera = false;
             }
@@ -102,7 +107,8 @@ void *t_change(void *threadid) {
             
             fscanf(f, "%s %s %s", e.id, e.estacao, e.hora);
             painel[i] = constroi_linha(e, true);
-            //printf("---------------\narq=%s %d\n%s %s %s pela thread: %d\n---------------\n\n", b, i, painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, id);
+            
+            // printf("---------------\narq=%s %d\n%s %s %s pela thread: %d\n---------------\n\n", b, i, painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, id);
             
             // libera a linha para outras threads
             pthread_mutex_unlock(&l_mutex[i]);
@@ -115,11 +121,14 @@ void *t_change(void *threadid) {
 void *print() {
     while(p_status) {
         printf("---------------------BOARD----------------\n");
-        for(int i = 0; i < l; i++)
-            printf("%s %s %s\n", painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora);
-        
+        for(int i = 0; i < l; i++) {
+            pthread_mutex_lock(&l_mutex[i]);
+            printf("%s %s %s - %i\n", painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, i);
+            pthread_cond_signal(&print_cond);
+            pthread_mutex_unlock(&l_mutex[i]);
+
+        }
         printf("---------------------END_BOARD----------------\n");
-        
         sleep(2);
     }
 
