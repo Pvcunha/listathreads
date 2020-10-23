@@ -76,6 +76,7 @@ void *t_change(void *threadid) {
         
         while(!feof(f)) {
             int i;
+            printf("thread=%d linha=%d\n", id, i);
             pthread_mutex_lock(&l_mutex[i]);
             if(painel[i].em_espera) {
                 printf("Estou em espera %d, linha=%d\n", id, i);
@@ -107,6 +108,8 @@ int main() {
     
     //Vetor de linhas do painel
     painel = (Linha *)malloc(l*sizeof(Linha));
+    for(int i = 0; i < l; i++) 
+        painel[i] = constroi_linha(constroi_trem("", "", ""), false);
     
     //Vetor de threads
     threads = (pthread_t *)malloc(t*sizeof(pthread_t));
