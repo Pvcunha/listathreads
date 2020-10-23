@@ -86,6 +86,7 @@ void *t_change(void *threadid) {
             // separa a linha na qual vai se trabalhar
             int i;
             fscanf(f, "%d", &i);
+            
             // so para debug
             //printf("thread=%d linha=%d\n", id, i);
             
@@ -93,7 +94,7 @@ void *t_change(void *threadid) {
             pthread_mutex_lock(&l_mutex[i]);
 
             //espera pelo fim do print
-            pthread_cond_wait(&print_cond, &l_mutex[i]);
+            //pthread_cond_wait(&print_cond, &l_mutex[i]);
 
             //verifica se a linha foi editada a pouco e se foi ela precisa permanecer 2 segundos sem ser mudada
             if(painel[i].em_espera) {
@@ -122,10 +123,12 @@ void *print() {
     while(p_status) {
         printf("---------------------BOARD----------------\n");
         for(int i = 0; i < l; i++) {
-            pthread_mutex_lock(&l_mutex[i]);
+            //pthread_mutex_lock(&l_mutex[i]);
+            printf("\033[0;31m");
             printf("%s %s %s - %i\n", painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, i);
-            pthread_cond_signal(&print_cond);
-            pthread_mutex_unlock(&l_mutex[i]);
+            printf("\033[0m");
+            //pthread_cond_signal(&print_cond);
+            //pthread_mutex_unlock(&l_mutex[i]);
 
         }
         printf("---------------------END_BOARD----------------\n");
