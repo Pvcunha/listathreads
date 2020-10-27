@@ -29,8 +29,6 @@ pthread_t print_thread;
 
 pthread_mutex_t gen_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t *l_mutex = NULL;
-pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t print_cond = PTHREAD_COND_INITIALIZER;
 
 // Representa o painel de linhas
 Linha *painel = NULL;
@@ -109,7 +107,7 @@ void *t_change(void *threadid) {
             fscanf(f, "%s %s %s", e.id, e.estacao, e.hora);
             painel[i] = constroi_linha(e, true);
             
-            // printf("---------------\narq=%s %d\n%s %s %s pela thread: %d\n---------------\n\n", b, i, painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, id);
+            //printf("---------------\narq=%s %d\n%s %s %s pela thread: %d\n---------------\n\n", b, i, painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, id);
             
             // libera a linha para outras threads
             pthread_mutex_unlock(&l_mutex[i]);
