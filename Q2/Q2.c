@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+#define TOTAL_COLOR 6
+
 typedef struct trem {
     char id[50];
     char estacao[50];
@@ -34,6 +36,31 @@ Linha *painel = NULL;
 
 //indica o fim do sistema pelo termino das outras threads
 bool p_status;
+
+
+void color(int i) {
+    switch(i) {
+        case 0:
+            printf("\033[0;31m"); // vermelho
+            break;
+        case 1:
+            printf("\033[0;32m"); // verde
+            break;
+        case 2:
+            printf("\033[0;33m"); // amarelo
+            break;
+        case 3:
+            printf("\033[0;34m"); // azul
+            break;
+        case 4:
+            printf("\033[0;35m"); // magenta
+            break;
+        case 5:
+            printf("\033[0;36m"); // ciano
+            break;
+    }
+}
+
 
 Trem constroi_trem(char *id, char *estacao, char *hora){
     Trem r;
@@ -109,19 +136,23 @@ void *t_change(void *threadid) {
 void *print() {
     while(p_status) {
         
+        // adormece para retomar o próximo print
+        sleep(2);
+        
         // limpa a tela para para o próximo quadro
         system("clear");
 
-        printf("---------------------BOARD----------------\n");
         for(int i = 0; i < l; i++) {
-            printf("\033[0;31m");
+            
+            // Escolhe cor de acordo com o index
+            color(i%TOTAL_COLOR);
+            
             printf("%s %s %s - %i\n", painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, i);
-            printf("\033[0m");
+            
+            // reseta para branco
+            printf("\033[0m"); 
             
         }
-        printf("---------------------END_BOARD----------------\n");
-        // adormece para retomar o próximo print
-        sleep(2);
     }
 
     pthread_exit(NULL);
