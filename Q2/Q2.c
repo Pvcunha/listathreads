@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+#define TOTAL_COLOR 6
+
 typedef struct trem {
     char id[50];
     char estacao[50];
@@ -13,7 +15,6 @@ typedef struct trem {
 
 typedef struct linha {
     Trem trem; 
-    bool em_espera;
 } Linha;
 
 /*  n representa o número de arquivos
@@ -36,6 +37,31 @@ Linha *painel = NULL;
 //indica o fim do sistema pelo termino das outras threads
 bool p_status;
 
+
+void color(int i) {
+    switch(i) {
+        case 0:
+            printf("\033[0;31m"); // vermelho
+            break;
+        case 1:
+            printf("\033[0;32m"); // verde
+            break;
+        case 2:
+            printf("\033[0;33m"); // amarelo
+            break;
+        case 3:
+            printf("\033[0;34m"); // azul
+            break;
+        case 4:
+            printf("\033[0;35m"); // magenta
+            break;
+        case 5:
+            printf("\033[0;36m"); // ciano
+            break;
+    }
+}
+
+
 Trem constroi_trem(char *id, char *estacao, char *hora){
     Trem r;
     strcpy(r.id, id);
@@ -44,11 +70,10 @@ Trem constroi_trem(char *id, char *estacao, char *hora){
     return r;
 }
 
-Linha constroi_linha(Trem e, bool em_espera) {
+Linha constroi_linha(Trem e) {
     Linha r;
 
     r.trem = e;
-    r.em_espera = em_espera;
 
     return r;
 }
@@ -91,24 +116,15 @@ void *t_change(void *threadid) {
             // tranca-se a linha
             pthread_mutex_lock(&l_mutex[i]);
 
-            //espera pelo fim do print
-            //pthread_cond_wait(&print_cond, &l_mutex[i]);
-
-            //verifica se a linha foi editada a pouco e se foi ela precisa permanecer 2 segundos sem ser mudada
-            if(painel[i].em_espera) {
-               //printf("Estou em espera %d, linha=%d\n", id, i);
-                sleep(2);
-                painel[i].em_espera = false;
-            }
-
             // Constrói toda  a linha das informaçoes tiradas do arquivo
             Trem e;
             
             fscanf(f, "%s %s %s", e.id, e.estacao, e.hora);
-            painel[i] = constroi_linha(e, true);
+            painel[i] = constroi_linha(e);
             
-            //printf("---------------\narq=%s %d\n%s %s %s pela thread: %d\n---------------\n\n", b, i, painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, id);
-            
+            // Adormece a linha por 2 segundos
+            sleep(2);            
+
             // libera a linha para outras threads
             pthread_mutex_unlock(&l_mutex[i]);
         }
@@ -119,18 +135,24 @@ void *t_change(void *threadid) {
 
 void *print() {
     while(p_status) {
-        printf("---------------------BOARD----------------\n");
-        for(int i = 0; i < l; i++) {
-            //pthread_mutex_lock(&l_mutex[i]);
-            printf("\033[0;31m");
-            printf("%s %s %s - %i\n", painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, i);
-            printf("\033[0m");
-            //pthread_cond_signal(&print_cond);
-            //pthread_mutex_unlock(&l_mutex[i]);
-
-        }
-        printf("---------------------END_BOARD----------------\n");
+        
+        // adormece para retomar o próximo print
         sleep(2);
+        
+        // limpa a tela para para o próximo quadro
+        system("clear");
+
+        for(int i = 0; i < l; i++) {
+            
+            // Escolhe cor de acordo com o index
+            color(i%TOTAL_COLOR);
+            
+            printf("%s %s %s - %i\n", painel[i].trem.id, painel[i].trem.estacao, painel[i].trem.hora, i);
+            
+            // reseta para branco
+            printf("\033[0m"); 
+            
+        }
     }
 
     pthread_exit(NULL);
@@ -150,7 +172,7 @@ int main() {
     //Vetor de linhas do painel
     painel = (Linha *)malloc(l*sizeof(Linha));
     for(int i = 0; i < l; i++) 
-        painel[i] = constroi_linha(constroi_trem("", "", ""), false);
+        painel[i] = constroi_linha(constroi_trem("", "", ""));
     
     //Vetor de threads
     threads = (pthread_t *)malloc(t*sizeof(pthread_t));
