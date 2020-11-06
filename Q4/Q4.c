@@ -1,85 +1,97 @@
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
+int N = 4; //Quantidade máxima de valores de threads.
 
-
-typedef struct dados
+typedef struct data
 {
-    pthread_t thread;
-    const pthread_attr_t atributo;
-    void * (*rotina)(void *);
-    void* threadid;
+    int a;
+    int b; 
+}Data;
 
-}dados;
-
-typedef struct resultado
-{
-    int id; 
-    void* result;
-}Resultado;
-
-typedef struct node
-{
-    void* func(void*);
-    int id;
+typedef struct node{
+    void** func;
+    Data k;
     struct node* next;
-} Node;
+}Node;
 
 typedef struct buffer{
-    Node* head  = NULL;
-    Node* tail = NULL;
+    Node *head;
+    Node *tail;
+    int size;
 }Buffer;
 
-int N = 4; // Número máximo de processos / threads
-int tam_espera = 30;
-int tam_resultado = 0;
-int threads_exec = 0; // Número de threads executando 
-int fun_agendados = 0; // Número de processos agendados até então.
+//buffer para as respostas
+typedef struct bufferR{
+    int ans;
+    Node *head;
+    Node *tail;
+}BufferR;
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; // Mutex
-pthread_cond_t empty = PTHREAD_COND_INITIALIZER; // Variável de condição que sinaliza se a fila ta vazia
-pthread_cond_t fill = PTHREAD_COND_INITIALIZER; // Variável de condição que sinaliza se a fila ta cheia
+//Buffer de espera
+Buffer* InputBuffer =NULL;
 
 
-Buffer *bufferEspera = (Buffer*)malloc(sizeof(Buffer)); // iniciando o buffer 
-Resultado* bufferResultado = NULL;
 
-void* func(void* info){
-    printf("Hello carai");
+//Funcao que será requisitada
+void* multiplier( Data* data)
+{   
+    int a = data->a;
+    int b = data->b; 
+    int result = a*b;
+    pthread_exit((void*) &result);
 }
 
-int agendarExecucao(void* struct var, void* func(void*)){
-    //insere chamada na buffer
+int agendarExecucao( void**routine, Data data )
+{
     Node* new = (Node*)malloc(sizeof(Node));
-    new->func = func(var);
     new->next = NULL;
-    Node* temp = bufferEspera->tail;
-    bufferEspera->tail->next = new;
-    bufferEspera->tail = new;
-    int id_ret = fun_agendados;//id global, repassada para o user
-    fun_agendados++;
-    return id_ret ; //retorna o threadid
+    new->func = routine; //Passando a função para o nó 
+    new->k = data;
+    InputBuffer->tail->next = new;
+    InputBuffer->tail = new;
 }
+/*
+void* user_routine()
+{
+    //Coisas que o usuario faz
+    Data input;
+    Node 
 
-void* rotina_despachante()
+    while(1)
+    {
+        Node->
+        input->a = rand()%99;
+        input->b = rand()%99;
+
+    }
+
+    pthreads_exit(NULL);
+}
+*/
+/*void* dispatcher_routine()
 {
     
-}
+    
+}*/
 
-int main(){
-    int c;
-    //Vetor de threads
-    pthread_t threads[N];
-    pthread_t despachante;
-    int* despachante_id = (int*)malloc(sizeof(int));
+int main()
+{
+    //inicializando o buffer 
+    InputBuffer->head = (Node*)(malloc(sizeof(Node)));
+    InputBuffer->tail = InputBuffer->head; 
+    //Thread de usuario
+/*
+    pthread_t user;
+    pthread_create(user,NULL,user_routine,NULL);
     
-    pthread_create(&despachante,NULL,rotina_despachante,&despachante_id);
+    //Thread despachante
+    pthread_t dispatcher;
+    pthread_create(dispatcher, NULL,dispatcher_routine,NULL);
 
-    //Tretas do usuário
-    scanf("%d",c);
-    
-    
-    
+    //Espera a thread usuário terminar
+    pthread_join(user,NULL);
+*/
     pthread_exit(NULL);
 }
