@@ -22,10 +22,19 @@ typedef struct cord{
     int y;
 }cord;
 
+// matriz que vai representar a imagem antes da conversão
 pixel **image;
+
+// matriz que representa a imagem após a conversão
 pixel **image2;
+
+//buffer de pixels sobrando
 cord *buffer = NULL;
+
+// index do buffer de pixels para threads usarem
 int buffer_index = 0;
+
+//tamanho do buffer
 int buffer_size;
 int indexi = 0;
 
@@ -34,13 +43,18 @@ void *convert(void *threadid){
     int id = *((int *)threadid);
     printf("Thread %d iniciou\n", id);
     while(indexi < buffer_size){
-        puts("entrou no loop\n");
+        //puts("entrou no loop\n");
         pthread_mutex_lock(&mutex);
+
+        //Pega as coordenadas do pixel
         int cordx = buffer[indexi].x;
         int cordy = buffer[indexi].y;
         indexi++;
+        
         printf("thread %d pegou coord=(%d, %d)\n", id, cordx , cordy);
         pthread_mutex_unlock(&mutex);
+        
+        // faz a conversão e armazena na imagem pos conversão
         int C = (int)(image[cordx][cordy].red*0.3 + image[cordx][cordy].green*0.59 + image[cordx][cordy].blue*0.11);
         image2[cordx][cordy].red = C;
         image2[cordx][cordy].green = C;
@@ -70,6 +84,8 @@ int main(){
     fscanf(file, "%d %d", &cols, &rows);
     fscanf(file, "%d", &maxvalue);
     
+    // Devidas alocações
+
     buffer_size = rows*cols;
     buffer = (cord *)malloc(buffer_size*sizeof(cord));
     if(!buffer) {
@@ -124,6 +140,7 @@ int main(){
 
     }
 
+    //abre o arquivo de saída e imprime a imagem convertida em out.ppm
     FILE *file_gray = fopen("out.ppm", "w");
     
     for(int i = 0;i<rows;i++){

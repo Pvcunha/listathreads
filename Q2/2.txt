@@ -4,3 +4,5 @@ WWW123 Munique 19:00
 MEU497 Berlim 18:50
 2
 OLA056 Frankfurt 20:00
+3
+todo rato 8:00

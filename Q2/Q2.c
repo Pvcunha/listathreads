@@ -162,6 +162,7 @@ int main() {
     
 
     // Inicializando e alocando variáveis necessárias
+    printf("Digite o valor de arquivos, threads e linhas para o programa:\n");
     scanf("%d %d %d", &n, &t, &l);
     
     p_status = true;
