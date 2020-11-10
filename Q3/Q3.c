@@ -13,21 +13,22 @@ int tota_subs = 0,ind=0,ans =0;
 
 void *compare1(void *threadid) {
     int id = *((int *)threadid);
+    //pega o tamanho das duas strings
     int tam1 = strlen(s1);
     int tam2 = strlen(s2);
-
+	// ind é a posicao inicial da substring
     while(ind<tam1-tam2+1){
         pthread_mutex_lock(&gen_mutex);
         char aux[500];
         //pega substring de tamanho s2 em s1;
         for(int i = 0;i<tam2+1 && i<tam1;i++){
+        	//adicionando letra por letra na string
             aux[i]=s1[ind+i];
         }
         aux[tam2]='\0';
         ind++;
         //se as strings forem iguais, adiciona 1 a resposta
         if(strcmp(aux,s2)==0)ans++;
-        //printf("THREAD_ID=%d, ans atual %d\n", id, ans);
 
         pthread_mutex_unlock(&gen_mutex);
     
@@ -60,9 +61,10 @@ int main() {
         }
 
     }
+    //junta todas as threads, istoé, espera todas terminarem
     for(int i = 0; i < n; i++) 
         pthread_join(threads[i], NULL);
-
+	// desaloca a memória utilizada
     printf("Resposta : %d substrings\n",ans);
     pthread_mutex_destroy(&gen_mutex);
 
