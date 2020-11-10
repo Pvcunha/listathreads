@@ -33,6 +33,7 @@ int tota_subs = 0,ind=0,ans =0;
 
 int i = 0;
 
+//calcula o somátório da fórmula da questão
 double calcsum(int i){
     double sum=0;
     for(int j=0;j<COLS;j++){
@@ -44,6 +45,7 @@ double calcsum(int i){
     return sum;
 }
 
+// funcao de resolver pelo metodo de jacobi
 void *solvejaco(void *threadid) {
     int id = *((int *)threadid);
     printf("inicializando thread %d\n", id);
@@ -51,10 +53,11 @@ void *solvejaco(void *threadid) {
     while(k[id] < P) {
         printf("begin[id]=%d | end[id]=%d\n", begin[id], end[id]);
         for(indexi[id] = begin[id]; indexi[id] <=end[id]; indexi[id]++){
-            
+            //aplicando a formula dada na questao
             double aii = (1/(double) matA[indexi[id]][indexi[id]]);
             double bi =  (double) matB[indexi[id]];
             double sum = calcsum(indexi[id]);
+            //barreira para esperar as outras variaveis atualizarem
             pthread_barrier_wait(&barrier2);
             matX[indexi[id]] = aii * (bi - sum);
             printf("id=%d | index[id]=%d | aii=%lf | bi=%lf | sum=%lf | X%d=%lf\n", id, indexi[id],  aii, bi, sum, indexi[id], matX[indexi[id]]);
@@ -63,9 +66,11 @@ void *solvejaco(void *threadid) {
         //incrementa o que excedeu;
         if(exc[id]!=0){
             printf("Entrou exc\n");
+            //aplicando a formula dada na questao
             double aii = (1/(double) matA[exc[id]][exc[id]]);
             double bi =  (double) matB[exc[id]];
             double sum = (double) calcsum(exc[id]);
+            //barreira para esperar as outras variaveis atualizarem
             pthread_barrier_wait(&barrier3);
             matX[exc[id]] = aii * (bi - sum);
             printf("id=%d | index[id]=%d | aii=%lf | bi=%lf | sum=%lf | X%d=%lf\n", id, indexi[id],  aii, bi, sum, indexi[id], matX[indexi[id]]);
@@ -93,23 +98,25 @@ int main() {
     
     int rc;
 
-    //cria todas as threads e seus id's
+   	//criando barreiras
     pthread_barrier_init(&barrier,NULL,N);
     pthread_barrier_init(&barrier2,NULL,N);
     pthread_barrier_init(&barrier3,NULL,N);
 
     int tam = ROWS/N, cont = 0;
+    //aqui estamos aplicando o numero minimo de variaveis que cada thread vai ser responsável
     for(int i=0; i < N ;i++){
         begin[i] = i*tam;
         end[i] = begin[i] + tam-1;
     }
+    // como a divisão entre threads e variaveis pode nao ser exata, essa parte servira para calcular as vzriaveis "excedentes"
     int exceeded = ROWS%N;
     for(int i = 0;i < exceeded; i++){
         exc[i] = tam*N+i+1;
     }
 
 
-    
+    //criando ids e threads
     for(int i = 0; i < N; i++) {
         threads_id[i] = (int *)malloc(sizeof(int));
         *(threads_id[i]) = i;
@@ -121,6 +128,7 @@ int main() {
         }
 
     }
+    // liberando espaço da memoria
     for(int i = 0; i < N; i++) 
         pthread_join(threads[i], NULL);
         
