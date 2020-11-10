@@ -167,19 +167,10 @@ int main()
         }
     
     }
+    
 
-    int u;
-    for(u=0; u<C;u++) 
-    {
-        char *res;
-        pthread_join(consumidor[u], (void **) &res);
-    }
-
-    for(u=0; u<C;u++) 
-    {
-        char *res;
-        pthread_join(produtor[u], (void **) &res);
-    }
-
-    return 0;
+  
+    //Já que o pthread_exit espera todas as threads terminarem para encerrar o programa
+    //(e nenhuma delas termina), basta chamá-lo em vez de 'return 0'. 
+    pthread_exit(NULL);
 }
